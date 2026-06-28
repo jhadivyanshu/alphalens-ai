@@ -83,7 +83,7 @@ export default function Company() {
       {/* Navbar */}
       <div className="border-b border-gray-800 px-6 py-4 flex items-center gap-4">
         <button onClick={() => navigate('/')} className="text-green-400 hover:text-green-300">← Back</button>
-        <h1 className="text-xl font-bold">Alpha<span className="text-green-400">Lens</span> AI</h1>
+       <h1 className="text-xl font-bold">📊 Alpha<span className="text-green-400">Lens</span> AI</h1>
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">

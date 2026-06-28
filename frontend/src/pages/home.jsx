@@ -31,7 +31,7 @@ export default function Home() {
       {/* Header */}
       <div className="text-center mb-10">
         <h1 className="text-5xl font-bold text-white mb-3">
-          Alpha<span className="text-green-400">Lens</span> AI
+           📊 Alpha<span className="text-green-400">Lens</span> AI
         </h1>
         <p className="text-gray-400 text-lg">
           AI Equity Research Terminal for Indian Markets
