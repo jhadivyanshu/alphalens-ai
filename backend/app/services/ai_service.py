@@ -128,3 +128,32 @@ Answer in 3-5 sentences. Be specific, data-driven, and helpful.
 If the question is not related to this company or investing, politely redirect.
 """
     return generate(prompt)
+def generate_qoq_explanation(company_name: str, q1: dict, q2: dict) -> str:
+    changes = []
+    
+    if q1.get('revenue') and q2.get('revenue'):
+        change = ((q2['revenue'] - q1['revenue']) / q1['revenue']) * 100
+        changes.append(f"Revenue: {'+' if change > 0 else ''}{round(change, 1)}% (₹{round(q1['revenue'])}Cr → ₹{round(q2['revenue'])}Cr)")
+    
+    if q1.get('pat_margin') and q2.get('pat_margin'):
+        change = q2['pat_margin'] - q1['pat_margin']
+        changes.append(f"PAT Margin: {'+' if change > 0 else ''}{round(change, 2)}% ({q1['pat_margin']}% → {q2['pat_margin']}%)")
+    
+    if q1.get('ebitda_margin') and q2.get('ebitda_margin'):
+        change = q2['ebitda_margin'] - q1['ebitda_margin']
+        changes.append(f"EBITDA Margin: {'+' if change > 0 else ''}{round(change, 2)}% ({q1['ebitda_margin']}% → {q2['ebitda_margin']}%)")
+
+    prompt = f"""
+You are an expert equity analyst covering Indian stock markets.
+
+Analyze the quarter on quarter changes for {company_name}:
+
+{chr(10).join(changes)}
+
+From period: {q1.get('period')}
+To period: {q2.get('period')}
+
+Explain in 3-4 sentences what changed, why it matters, and what investors should watch.
+Be specific and data-driven.
+"""
+    return generate(prompt)

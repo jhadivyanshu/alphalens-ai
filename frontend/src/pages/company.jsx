@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getCompany, getCompanyScore, getCompanySummary, getCompanyNews, getCompanyFinancials, getCompanyPrices, sendChat } from '../services/api'
+import { getCompany, getCompanyScore, getCompanySummary, getCompanyNews, getCompanyFinancials, getCompanyPrices, sendChat, getCompanyChanges } from '../services/api'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 
 export default function Company() {
@@ -13,6 +13,7 @@ export default function Company() {
   const [news, setNews] = useState([])
   const [financials, setFinancials] = useState([])
   const [prices, setPrices] = useState([])
+  const [changes, setChanges] = useState(null)
   const [chat, setChat] = useState({ question: '', answer: '', loading: false })
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
@@ -24,18 +25,20 @@ export default function Company() {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const [companyRes, scoreRes, newsRes, financialsRes, pricesRes] = await Promise.all([
+      const [companyRes, scoreRes, newsRes, financialsRes, pricesRes, changesRes] = await Promise.all([
         getCompany(symbol),
         getCompanyScore(symbol),
         getCompanyNews(symbol),
         getCompanyFinancials(symbol),
-        getCompanyPrices(symbol)
+        getCompanyPrices(symbol),
+        getCompanyChanges(symbol)
       ])
       setCompany(companyRes.data.data)
       setScore(scoreRes.data.data)
       setNews(newsRes.data.data)
       setFinancials(financialsRes.data.data)
       setPrices(pricesRes.data.data)
+      setChanges(changesRes.data.data)
     } catch (err) {
       console.error(err)
     }
@@ -108,7 +111,7 @@ export default function Company() {
 
         {/* Tabs */}
         <div className="flex gap-4 border-b border-gray-800 mb-8">
-          {['overview', 'financials', 'ai summary', 'news', 'chat'].map(tab => (
+          {['overview', 'financials', 'ai summary', 'news', 'chat', 'qoq'].map(tab => (
             <button
               key={tab}
               onClick={() => {
@@ -129,8 +132,6 @@ export default function Company() {
         {/* Overview Tab */}
         {activeTab === 'overview' && (
           <div className="space-y-8">
-
-            {/* Score Cards */}
             {score && (
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 {Object.entries(score.engines).map(([key, data]) => (
@@ -142,7 +143,6 @@ export default function Company() {
               </div>
             )}
 
-            {/* Price Chart */}
             {prices.length > 0 && (
               <div className="bg-gray-800 rounded-xl p-6">
                 <h3 className="text-lg font-semibold mb-4">Price History</h3>
@@ -157,7 +157,6 @@ export default function Company() {
               </div>
             )}
 
-            {/* Score Reasons */}
             {score && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {Object.entries(score.engines).map(([key, data]) => (
@@ -300,6 +299,40 @@ export default function Company() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* QoQ Tab */}
+        {activeTab === 'qoq' && (
+          <div className="space-y-6">
+            {!changes ? (
+              <div className="text-center text-gray-400 py-12">Loading...</div>
+            ) : (
+              <>
+                <div className="flex gap-2 text-gray-400 text-sm mb-2">
+                  <span>{changes.from}</span>
+                  <span>→</span>
+                  <span className="text-white">{changes.to}</span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {changes.changes.map((c, i) => (
+                    <div key={i} className="bg-gray-800 rounded-xl p-4">
+                      <div className="text-gray-400 text-sm mb-1">{c.metric}</div>
+                      <div className={`text-2xl font-bold ${c.direction === 'up' ? 'text-green-400' : 'text-red-400'}`}>
+                        {c.direction === 'up' ? '+' : ''}{c.change_percent}%
+                      </div>
+                      <div className="text-gray-500 text-xs mt-1">
+                        {c.from} → {c.to} {c.unit}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="bg-gray-800 rounded-xl p-6">
+                  <h3 className="text-green-400 font-semibold mb-3">AI Explanation</h3>
+                  <p className="text-gray-300 leading-relaxed">{changes.ai_explanation}</p>
+                </div>
+              </>
+            )}
           </div>
         )}
 
