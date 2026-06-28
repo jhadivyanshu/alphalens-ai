@@ -107,3 +107,24 @@ def parse_summary(raw: str) -> dict:
         result[key] = result[key].strip()
 
     return result
+def generate_chat_response(question: str, symbol: str, company_name: str, context: dict) -> str:
+    prompt = f"""
+You are an expert equity research analyst for Indian stock markets.
+
+You are answering questions about {company_name} ({symbol}).
+
+Company Context:
+- Sector: {context.get('sector', 'N/A')}
+- Current Price: ₹{context.get('price', 'N/A')}
+- Alpha Score: {context.get('overall_score', 'N/A')}/100
+- Financial Score: {context.get('financial_score', 'N/A')}
+- Technical Score: {context.get('technical_score', 'N/A')}
+- Revenue: ₹{context.get('revenue', 'N/A')} crores
+- PAT Margin: {context.get('pat_margin', 'N/A')}%
+
+User Question: {question}
+
+Answer in 3-5 sentences. Be specific, data-driven, and helpful.
+If the question is not related to this company or investing, politely redirect.
+"""
+    return generate(prompt)
