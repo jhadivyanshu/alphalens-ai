@@ -1,0 +1,109 @@
+import os
+from dotenv import load_dotenv
+from google import genai
+
+load_dotenv()
+
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+MODEL = "gemini-2.5-flash"
+
+
+def generate(prompt: str) -> str:
+    try:
+        response = client.models.generate_content(
+            model=MODEL,
+            contents=prompt
+        )
+        return response.text
+    except Exception as e:
+        return f"AI error: {str(e)}"
+
+
+def generate_company_summary(company_name: str, sector: str, financials: dict, score: dict) -> dict:
+    prompt = f"""
+You are an expert equity research analyst covering Indian stock markets.
+
+Analyze this company and provide a structured research summary.
+
+Company: {company_name}
+Sector: {sector}
+
+Financial Snapshot:
+- Revenue: ₹{financials.get('revenue', 'N/A')} crores
+- PAT Margin: {financials.get('pat_margin', 'N/A')}%
+- EBITDA Margin: {financials.get('ebitda_margin', 'N/A')}%
+
+Alpha Score: {score.get('overall', 'N/A')}/100
+- Financial Score: {score.get('financial', 'N/A')}
+- Technical Score: {score.get('technical', 'N/A')}
+- Risk Score: {score.get('risk', 'N/A')}
+
+Provide your analysis in this exact format:
+
+BUSINESS:
+[2-3 sentences about what the company does and its market position]
+
+STRENGTHS:
+- [strength 1]
+- [strength 2]
+- [strength 3]
+
+WEAKNESSES:
+- [weakness 1]
+- [weakness 2]
+
+FUTURE_OUTLOOK:
+[2-3 sentences about growth prospects]
+
+RISKS:
+- [risk 1]
+- [risk 2]
+
+AI_VERDICT:
+[1 sentence verdict for investors]
+"""
+
+    raw = generate(prompt)
+    return parse_summary(raw)
+
+
+def parse_summary(raw: str) -> dict:
+    result = {
+        "business": "",
+        "strengths": [],
+        "weaknesses": [],
+        "future_outlook": "",
+        "risks": [],
+        "ai_verdict": ""
+    }
+
+    current_section = None
+    for line in raw.split("\n"):
+        line = line.strip()
+        if not line:
+            continue
+
+        if line.startswith("BUSINESS:"):
+            current_section = "business"
+        elif line.startswith("STRENGTHS:"):
+            current_section = "strengths"
+        elif line.startswith("WEAKNESSES:"):
+            current_section = "weaknesses"
+        elif line.startswith("FUTURE_OUTLOOK:"):
+            current_section = "future_outlook"
+        elif line.startswith("RISKS:"):
+            current_section = "risks"
+        elif line.startswith("AI_VERDICT:"):
+            current_section = "ai_verdict"
+        elif current_section:
+            if current_section in ["strengths", "weaknesses", "risks"]:
+                if line.startswith("-"):
+                    result[current_section].append(line[1:].strip())
+            elif current_section in ["business", "future_outlook", "ai_verdict"]:
+                result[current_section] += line + " "
+
+    # Clean up
+    for key in ["business", "future_outlook", "ai_verdict"]:
+        result[key] = result[key].strip()
+
+    return result

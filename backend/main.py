@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from app.api import search, company, score
+from app.api import search, company, score, ai, news
 
 load_dotenv()
 
@@ -22,6 +22,8 @@ app.add_middleware(
 app.include_router(search.router, prefix="/api")
 app.include_router(company.router, prefix="/api")
 app.include_router(score.router, prefix="/api")
+app.include_router(ai.router, prefix="/api")
+app.include_router(news.router, prefix="/api")
 
 @app.get("/")
 def root():
